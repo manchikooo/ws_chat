@@ -1,6 +1,6 @@
 # 💬 WS.Chat
 
-Простой чат для изучения WebSockets. Построен на **React + TypeScript + Vite**.
+Чат для изучения WebSockets. Построен на **React + TypeScript + Vite**.
 
 ## 📋 О проекте
 
