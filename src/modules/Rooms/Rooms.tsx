@@ -3,6 +3,7 @@ import {IconPlus} from "@tabler/icons-react";
 import type {RoomsProps} from "./types.ts";
 import {useForm} from "@mantine/form";
 import type {IMessage, IRoom, RoomType} from "../Room/types.ts";
+import {emit} from "../../utils/socketEmit.ts";
 
 export const Rooms = ({socket, rooms, handleRequestRooms, setActiveRoom, setMessages}: RoomsProps) => {
     const createRoomForm = useForm({
@@ -27,27 +28,25 @@ export const Rooms = ({socket, rooms, handleRequestRooms, setActiveRoom, setMess
     })
 
     const handleCreateRoom = async (values: { name: string, type: RoomType }) => {
-        const response: IRoom = await socket?.emitWithAck('room:create', values)
-        if ('error' in response) {
-            console.warn(response.error);
-            return
+        const data = await emit<{ room: IRoom }>(socket, 'room:create', values)
+        if (data) {
+            handleRequestRooms()
         }
-        handleRequestRooms()
+
     }
 
     const handleJoinRoom = async (inviteCode: string) => {
         setActiveRoom(null)
         setMessages([])
-        const response: { room: IRoom } | { error: string } = await socket?.emitWithAck('room:join', {inviteCode})
-        if ('error' in response) {
-            console.warn(response.error);
-            return
+        const data = await emit<{ room: IRoom }>(socket, 'room:join', {inviteCode})
+        if (data) {
+            setActiveRoom(data.room)
         }
-        setActiveRoom(response.room)
+
         // load room history
         const messagesHistory: { messages: IMessage[] } | {
             error: string
-        } = await socket?.emitWithAck('room:history', {roomId: response.room.id})
+        } = await socket?.emitWithAck('room:history', {roomId: data?.room.id})
         if ('error' in messagesHistory) {
             console.warn(messagesHistory.error);
             return

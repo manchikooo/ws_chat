@@ -10,7 +10,7 @@ import {Login} from "./modules/Login/Login.tsx";
 import type {IMessage, IRoom} from "./modules/Room/types.ts";
 import {Room} from "./modules/Room/Room.tsx";
 import {BACKEND_URL} from "./constants/URL.ts";
-
+import {emit} from "./utils/socketEmit.ts";
 
 function App() {
     const [socket, setSocket] = useState<Socket>();
@@ -23,12 +23,11 @@ function App() {
     const [activeRoom, setActiveRoom] = useState<IRoom | null>(null);
 
     const handleRequestRooms = async () => {
-        const response = await socket?.emitWithAck('room:list')
-        if ('error' in response) {
-            console.warn(response.error);
-            return
+        const data = await emit<IRoom[]>(socket, 'room:list');
+
+        if (data) {
+            setRooms(data);
         }
-        setRooms(response);
     }
 
     // показываю notification, если ошибка при логине. при закрытии notification зачищаю setIsLoginError

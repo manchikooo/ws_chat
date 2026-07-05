@@ -1,24 +1,26 @@
 import {Button, CopyButton, Flex, ScrollArea, Stack, Text, TextInput, Title, UnstyledButton} from "@mantine/core";
 import {IconCheck, IconCopy, IconSend} from "@tabler/icons-react";
-import type {IMessage, RoomProps} from "./types.ts";
+import type {RoomProps} from "./types.ts";
 import {useForm} from "@mantine/form";
+import {emit} from "../../utils/socketEmit.ts";
 
 export const Room = ({socket, activeRoom, messages}: RoomProps) => {
+
     const sendMessageForm = useForm({
         initialValues: {
             content: '',
         }
     })
-    
+
     const handleSubmitMessage = async (values: { content: string }) => {
         if (!activeRoom) return
-        const response: { message: IMessage } | { error: string } =
-            await socket?.emitWithAck("message:send", {content: values.content, roomId: activeRoom.id})
-        if ('error' in response) {
-            console.warn(response.error)
-            return
+        const data = await emit<{ ok: boolean, id: string }>(socket, "message:send", {
+            content: values.content,
+            roomId: activeRoom.id
+        })
+        if (data) {
+            sendMessageForm.reset()
         }
-        sendMessageForm.reset()
     }
     return (
         <Stack>

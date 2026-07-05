@@ -1,6 +1,7 @@
 import {Button, Space, Stack, TextInput} from "@mantine/core";
 import type {LoginProps} from "./types.ts";
 import {useForm} from "@mantine/form";
+import {emit} from "../../utils/socketEmit.ts";
 
 export const Login = ({socket, setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
     const loginForm = useForm({
@@ -12,15 +13,16 @@ export const Login = ({socket, setIsErrorMessage, setIsUserId, setIsLoggedIn, ha
         },
     });
 
+
     const handleLogin = async (values: { name: string }) => {
-        const response = await socket?.emitWithAck('user:join', values)
-        if ('error' in response) {
-            console.warn(response.error);
-            setIsErrorMessage(response.error);
+        const data = await emit<{ userId: string }>(socket, 'user:join', values)
+        if (data) {
+            setIsUserId(data.userId)
+            setIsLoggedIn(true)
+            await handleRequestRooms()
+        } else {
+            setIsErrorMessage('Login failed')
         }
-        setIsUserId(response.userId);
-        setIsLoggedIn(true);
-        await handleRequestRooms()
     }
 
     return (
