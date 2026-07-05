@@ -3,7 +3,7 @@ import {IconPlus} from "@tabler/icons-react";
 import type {RoomsProps} from "./types.ts";
 import {useForm} from "@mantine/form";
 import type {IMessage, IRoom, RoomType} from "../Room/types.ts";
-import {emit} from "../../utils/socketEmit.ts";
+import {emit} from "../../api/socketEmit.ts";
 
 export const Rooms = ({socket, rooms, handleRequestRooms, setActiveRoom, setMessages}: RoomsProps) => {
     const createRoomForm = useForm({
@@ -32,7 +32,6 @@ export const Rooms = ({socket, rooms, handleRequestRooms, setActiveRoom, setMess
         if (data) {
             handleRequestRooms()
         }
-
     }
 
     const handleJoinRoom = async (inviteCode: string) => {

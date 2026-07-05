@@ -1,7 +1,7 @@
 import {Button, Space, Stack, TextInput} from "@mantine/core";
 import type {LoginProps} from "./types.ts";
 import {useForm} from "@mantine/form";
-import {emit} from "../../utils/socketEmit.ts";
+import {emit} from "../../api/socketEmit.ts";
 
 export const Login = ({socket, setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
     const loginForm = useForm({

@@ -2,7 +2,7 @@ import {Button, CopyButton, Flex, ScrollArea, Stack, Text, TextInput, Title, Uns
 import {IconCheck, IconCopy, IconSend} from "@tabler/icons-react";
 import type {RoomProps} from "./types.ts";
 import {useForm} from "@mantine/form";
-import {emit} from "../../utils/socketEmit.ts";
+import {emit} from "../../api/socketEmit.ts";
 
 export const Room = ({socket, activeRoom, messages}: RoomProps) => {
 

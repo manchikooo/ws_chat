@@ -10,7 +10,7 @@ import {Login} from "./modules/Login/Login.tsx";
 import type {IMessage, IRoom} from "./modules/Room/types.ts";
 import {Room} from "./modules/Room/Room.tsx";
 import {BACKEND_URL} from "./constants/URL.ts";
-import {emit} from "./utils/socketEmit.ts";
+import {emit} from "./api/socketEmit.ts";
 
 function App() {
     const [socket, setSocket] = useState<Socket>();
