@@ -1,28 +1,25 @@
 import {Button, Space, Stack, TextInput} from "@mantine/core";
 import type {LoginProps} from "./types.ts";
-import {useForm} from "@mantine/form";
-import {emit} from "../../api/socketEmit.ts";
+import {userApi} from "../../api/user.api.ts";
+import type {UserJoinDto} from "../../api/types.ts";
+import {useUserJoinForm} from "../../forms/login.form.ts";
 
 export const Login = ({socket, setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
-    const loginForm = useForm({
-        initialValues: {
-            name: '',
-        },
-        validate: {
-            name: (value: string) => (value.trim().length > 0) ? null : 'Name is required',
-        },
-    });
+    const loginForm = useUserJoinForm()
 
+    const handleLogin = async (values: UserJoinDto) => {
+        if (!socket) return
 
-    const handleLogin = async (values: { name: string }) => {
-        const data = await emit<{ userId: string }>(socket, 'user:join', values)
-        if (data) {
-            setIsUserId(data.userId)
-            setIsLoggedIn(true)
-            await handleRequestRooms()
-        } else {
+        const data = await userApi.join(socket, values)
+        if (!data) {
             setIsErrorMessage('Login failed')
+            return
         }
+
+        setIsUserId(data.userId)
+        setIsLoggedIn(true)
+
+        await handleRequestRooms()
     }
 
     return (

@@ -1,27 +1,26 @@
 import {Button, CopyButton, Flex, ScrollArea, Stack, Text, TextInput, Title, UnstyledButton} from "@mantine/core";
 import {IconCheck, IconCopy, IconSend} from "@tabler/icons-react";
 import type {RoomProps} from "./types.ts";
-import {useForm} from "@mantine/form";
-import {emit} from "../../api/socketEmit.ts";
+import {messageApi} from "../../api/message.api.ts";
+import type {MessageSendDto} from "../../api/types.ts";
+import {useSendMessageForm} from "../../forms/message.form.ts";
 
 export const Room = ({socket, activeRoom, messages}: RoomProps) => {
+    const sendMessageForm = useSendMessageForm()
 
-    const sendMessageForm = useForm({
-        initialValues: {
-            content: '',
-        }
-    })
+    const handleSubmitMessage = async (values: MessageSendDto) => {
+        if (!activeRoom || !socket) return
 
-    const handleSubmitMessage = async (values: { content: string }) => {
-        if (!activeRoom) return
-        const data = await emit<{ ok: boolean, id: string }>(socket, "message:send", {
+        const data = await messageApi.send(socket, {
             content: values.content,
             roomId: activeRoom.id
         })
-        if (data) {
-            sendMessageForm.reset()
-        }
+
+        if (!data) return
+
+        sendMessageForm.reset()
     }
+
     return (
         <Stack>
             {activeRoom && (
