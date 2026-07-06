@@ -1,56 +1,40 @@
 import {Button, Divider, Flex, ScrollArea, Space, Stack, TextInput, Title, UnstyledButton} from "@mantine/core";
 import {IconPlus} from "@tabler/icons-react";
 import type {RoomsProps} from "./types.ts";
-import {useForm} from "@mantine/form";
-import type {IMessage, IRoom, RoomType} from "../Room/types.ts";
-import {emit} from "../../utils/socketEmit.ts";
+import {roomApi} from "../../api/room.api.ts";
+import type {RoomCreateDto} from "../../api/types.ts";
+import {useCreateRoomForm, useJoinRoomForm} from "../../forms/room.form.ts";
 
 export const Rooms = ({socket, rooms, handleRequestRooms, setActiveRoom, setMessages}: RoomsProps) => {
-    const createRoomForm = useForm({
-        initialValues: {
-            name: '',
-            type: 'GROUP' as RoomType
-        },
-        validate: {
-            name: (value: string) =>
-                value.trim().length > 0 ? null : 'Name is required'
-        }
-    })
+    const createRoomForm = useCreateRoomForm()
+    const joinRoomForm = useJoinRoomForm()
 
-    const joinRoomForm = useForm({
-        initialValues: {
-            inviteCode: '',
-        },
-        validate: {
-            inviteCode: (value: string) =>
-                value.trim().length > 0 ? null : 'Invite code is required',
-        }
-    })
+    const handleCreateRoom = async (values: RoomCreateDto) => {
+        if (!socket) return
 
-    const handleCreateRoom = async (values: { name: string, type: RoomType }) => {
-        const data = await emit<{ room: IRoom }>(socket, 'room:create', values)
-        if (data) {
-            handleRequestRooms()
-        }
+        const data = await roomApi.create(socket, values)
 
+        if (!data) return
+
+        createRoomForm.reset()
+        handleRequestRooms()
     }
 
     const handleJoinRoom = async (inviteCode: string) => {
         setActiveRoom(null)
         setMessages([])
-        const data = await emit<{ room: IRoom }>(socket, 'room:join', {inviteCode})
-        if (data) {
-            setActiveRoom(data.room)
-        }
 
-        // load room history
-        const messagesHistory: { messages: IMessage[] } | {
-            error: string
-        } = await socket?.emitWithAck('room:history', {roomId: data?.room.id})
-        if ('error' in messagesHistory) {
-            console.warn(messagesHistory.error);
-            return
-        }
+        if (!socket) return
+
+        const data = await roomApi.join(socket, {inviteCode})
+
+        if (!data) return
+
+        setActiveRoom(data.room)
+
+        const messagesHistory = await roomApi.history(socket, {roomId: data.room.id})
+        if (!messagesHistory) return
+
         setMessages(messagesHistory.messages);
     }
 
