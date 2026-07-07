@@ -58,9 +58,9 @@ export const Rooms = () => {
             <Title style={{color: 'var(--mantine-color-blue-filled)'}}>
                 Rooms
             </Title>
-            <ScrollArea h='calc(100dvh - 100px'>
+            <ScrollArea h='calc(100dvh - 100px)'>
                 <form onSubmit={createRoomForm.onSubmit(handleCreateRoom)}>
-                    <Flex align='flex-end' gap='10px' justify='center' px='10px'>
+                    <Flex align='flex-start' gap='10px' justify='center' px='10px'>
                         <TextInput
                             withAsterisk
                             label='Create room'
@@ -70,7 +70,7 @@ export const Rooms = () => {
                             w='100%'
                             placeholder='Room name'
                             {...createRoomForm.getInputProps('name')}/>
-                        <Button type='submit'>
+                        <Button type='submit' mt='25px'>
                             <IconPlus/>
                         </Button>
                     </Flex>
