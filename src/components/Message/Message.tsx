@@ -21,7 +21,11 @@ export const Message = ({message}: MessageProps) => {
     const {senderId, id: messageId, content, createdAt, updatedAt} = message;
     const amISender = currentUserId === senderId;
 
+    const isContentChanged = editedContent.trim() !== content.trim();
+    const isContentEmpty = editedContent.trim().length === 0;
+
     const handleSave = useCallback(async () => {
+        if (!isContentChanged || isContentEmpty) return;
         const data = await messageApi.edit(socket, {
             messageId,
             content: editedContent
@@ -32,7 +36,7 @@ export const Message = ({message}: MessageProps) => {
         }
 
         setEditMode(false);
-    }, [messageId, socket, editedContent])
+    }, [isContentChanged, isContentEmpty, socket, messageId, editedContent])
 
     const handleCancel = useCallback(() => {
         setEditedContent(content);
@@ -42,10 +46,12 @@ export const Message = ({message}: MessageProps) => {
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault()
-            handleSave()
+            if (isContentChanged && !isContentEmpty) {
+                handleSave();
+            }
         }
         if (e.key === 'Escape') handleCancel()
-    }, [handleSave, handleCancel])
+    }, [handleCancel, isContentChanged, isContentEmpty, handleSave])
 
     const handleDoubleClick = useCallback(() => {
         if (amISender) setEditMode(true)
@@ -86,6 +92,7 @@ export const Message = ({message}: MessageProps) => {
                             color="blue"
                             size="xs"
                             onClick={handleSave}
+                            disabled={!isContentChanged || isContentEmpty}
                         >
                             Сохранить
                         </Button>
