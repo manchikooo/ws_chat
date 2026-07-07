@@ -5,6 +5,7 @@ import {messageApi} from "../../api/message.api.ts";
 import type {MessageSendDto} from "../../api/types.ts";
 import {useSendMessageForm} from "../../forms/message.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
+import {Message} from "../../components/Message/Message.tsx";
 
 export const Room = ({activeRoom, messages}: RoomProps) => {
     const socket = useSocket();
@@ -42,9 +43,7 @@ export const Room = ({activeRoom, messages}: RoomProps) => {
                     </Flex>
                     <ScrollArea h='70dvh'>
                         {messages.map((message) => (
-                            <Text key={message.id}>
-                                {message.senderName}:{message.content}
-                            </Text>
+                            <Message message={message} key={message.id}/>
                         ))}
                     </ScrollArea>
                     <form onSubmit={sendMessageForm.onSubmit(handleSubmitMessage)}>
