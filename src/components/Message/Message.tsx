@@ -59,6 +59,10 @@ export const Message = ({message}: MessageProps) => {
             setMessages(updatedMessages);
         };
         socket.on('message:updated', handleMessageUpdated)
+
+        return () => {
+            socket.off('message:updated', handleMessageUpdated)
+        }
     }, [messages, setMessages, socket]);
 
     if (editMode) {
