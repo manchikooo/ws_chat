@@ -18,6 +18,11 @@ export interface MessageSendDto {
     roomId: string;
 }
 
+export interface MessageEditDto {
+    messageId: string;
+    content: string;
+}
+
 export interface UserJoinDto {
     name: string,
     userId?: string

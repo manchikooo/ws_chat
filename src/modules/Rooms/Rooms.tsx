@@ -5,9 +5,16 @@ import {roomApi} from "../../api/room.api.ts";
 import type {RoomCreateDto} from "../../api/types.ts";
 import {useCreateRoomForm, useJoinRoomForm} from "../../forms/room.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
+import {useAppSelector} from "../../store/store.ts";
+import {useActions} from "../../hooks/useActions.ts";
 
-export const Rooms = ({rooms, handleRequestRooms, setActiveRoom, setMessages}: RoomsProps) => {
+export const Rooms = ({handleRequestRooms}: RoomsProps) => {
     const socket = useSocket()
+
+    const {setMessages, setCurrentRoom} = useActions()
+
+    const {rooms} = useAppSelector(state => state.room);
+
     const createRoomForm = useCreateRoomForm()
     const joinRoomForm = useJoinRoomForm()
 
@@ -23,7 +30,7 @@ export const Rooms = ({rooms, handleRequestRooms, setActiveRoom, setMessages}: R
     }
 
     const handleJoinRoom = async (inviteCode: string) => {
-        setActiveRoom(null)
+        setCurrentRoom(null)
         setMessages([])
 
         if (!socket) return
@@ -32,7 +39,7 @@ export const Rooms = ({rooms, handleRequestRooms, setActiveRoom, setMessages}: R
 
         if (!data) return
 
-        setActiveRoom(data.room)
+        setCurrentRoom(data.room)
 
         const messagesHistory = await roomApi.history(socket, {roomId: data.room.id})
         if (!messagesHistory) return
