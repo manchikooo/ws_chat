@@ -13,8 +13,8 @@ export const Message = ({message}: MessageProps) => {
 
     const {setMessages} = useActions()
 
-    const {currentUserId} = useAppSelector(state => state.userInfo);
-    const {messages} = useAppSelector(state => state.room);
+    const {currentUserId} = useAppSelector(state => state.user);
+    const {messages} = useAppSelector(state => state.message);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editedContent, setEditedContent] = useState<string>(message.content);
 
@@ -53,13 +53,13 @@ export const Message = ({message}: MessageProps) => {
 
     useEffect(() => {
         const handleMessageUpdated = (updatedMessage: IMessage) => {
-            const updatedMessages = messages.map(m =>
-                m.id === updatedMessage.id ? updatedMessage : m
+            const updatedMessages = messages.map(msg =>
+                msg.id === updatedMessage.id ? updatedMessage : msg
             );
             setMessages(updatedMessages);
         };
         socket.on('message:updated', handleMessageUpdated)
-    }, []);
+    }, [messages, setMessages, socket]);
 
     if (editMode) {
         return (
@@ -72,7 +72,7 @@ export const Message = ({message}: MessageProps) => {
                               autosize
                               styles={{
                                   input: {
-                                      minWidth: '250px',
+                                      minWidth: '400px',
                                   }
                               }}
                     />

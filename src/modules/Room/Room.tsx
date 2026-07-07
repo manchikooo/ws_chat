@@ -1,4 +1,4 @@
-import {Button, CopyButton, Flex, ScrollArea, Stack, Text, TextInput, Title, UnstyledButton} from "@mantine/core";
+import {Button, CopyButton, Flex, ScrollArea, Stack, Text, Textarea, Title, UnstyledButton} from "@mantine/core";
 import {IconCheck, IconCopy, IconSend} from "@tabler/icons-react";
 import type {IMessage} from "./types.ts";
 import {messageApi} from "../../api/message.api.ts";
@@ -7,14 +7,16 @@ import {useSendMessageForm} from "../../forms/message.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
 import {Message} from "../../components/Message/Message.tsx";
 import {useAppSelector} from "../../store/store.ts";
-import {useEffect} from "react";
+import {type KeyboardEvent, useEffect} from "react";
 import {useActions} from "../../hooks/useActions.ts";
+
 
 export const Room = () => {
     const socket = useSocket();
     const {setNewMessage} = useActions();
 
-    const {currentRoom, messages} = useAppSelector(state => state.room);
+    const {messages} = useAppSelector(state => state.message);
+    const {currentRoom} = useAppSelector(state => state.room);
 
     const sendMessageForm = useSendMessageForm()
 
@@ -29,6 +31,17 @@ export const Room = () => {
         sendMessageForm.reset()
     }
 
+    const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter') {
+            if (e.shiftKey) {
+                // Shift + Enter = перенос строки (поведение по умолчанию)
+                return;
+            }
+            e.preventDefault();
+            sendMessageForm.onSubmit(handleSubmitMessage)();
+        }
+    };
+
     useEffect(() => {
         socket.on('message:new', (message: IMessage) => {
             setNewMessage(message)
@@ -36,33 +49,40 @@ export const Room = () => {
     }, []);
 
     return (
-        <Stack>
+        <Stack h='calc(100dvh - 100px)'>
             {currentRoom && (
                 <>
-                    <Title>
-                        {currentRoom.name || currentRoom.id} - {currentRoom.memberCount}
-                    </Title>
-                    <Flex>
-                        <Text>Invite code: {currentRoom.inviteCode}</Text>
-                        <CopyButton value={currentRoom.inviteCode}>
-                            {({copied, copy}) => (
-                                <Button color={copied ? 'teal' : 'blue'} onClick={copy}>
-                                    {copied ? <IconCheck size={16}/> : <IconCopy size={16}/>}
-                                </Button>
-                            )}
-                        </CopyButton>
+                    <Flex direction="column">
+                        <Title style={{color: 'var(--mantine-color-blue-filled)'}}>
+                            {currentRoom.name || currentRoom.id} - {currentRoom.memberCount}
+                        </Title>
+                        <Flex align='center' gap='5px' m='auto'>
+                            <Text>Invite code: {currentRoom.inviteCode}</Text>
+                            <CopyButton value={currentRoom.inviteCode}>
+                                {({copied, copy}) => (
+                                    <Button size='xs'
+                                            color={copied ? 'teal' : 'blue'}
+                                            onClick={copy}
+                                    >
+                                        {copied ? <IconCheck size={16}/> : <IconCopy size={16}/>}
+                                    </Button>
+                                )}
+                            </CopyButton>
+                        </Flex>
                     </Flex>
-                    <ScrollArea h='70dvh' offsetScrollbars>
+                    <ScrollArea h='100%' offsetScrollbars>
                         {messages.map((message) => (
                             <Message message={message} key={message.id}/>
                         ))}
                     </ScrollArea>
                     <form onSubmit={sendMessageForm.onSubmit(handleSubmitMessage)}>
                         <Flex align='flex-end' gap='10px'>
-                            <TextInput
-                                withAsterisk
+                            <Textarea
+                                style={{width: '100%'}}
+                                autosize
                                 label='Message'
                                 placeholder='Your message'
+                                onKeyDown={handleKeyDown}
                                 {...sendMessageForm.getInputProps('content')} />
                             <UnstyledButton type='submit'>
                                 <IconSend/>
