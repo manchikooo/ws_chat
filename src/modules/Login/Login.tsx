@@ -3,8 +3,10 @@ import type {LoginProps} from "./types.ts";
 import {userApi} from "../../api/user.api.ts";
 import type {UserJoinDto} from "../../api/types.ts";
 import {useUserJoinForm} from "../../forms/login.form.ts";
+import {useSocket} from "../../hooks/useSocket.ts";
 
-export const Login = ({socket, setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
+export const Login = ({setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
+    const socket = useSocket();
     const loginForm = useUserJoinForm()
 
     const handleLogin = async (values: UserJoinDto) => {
