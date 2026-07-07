@@ -4,10 +4,13 @@ import {userApi} from "../../api/user.api.ts";
 import type {UserJoinDto} from "../../api/types.ts";
 import {useUserJoinForm} from "../../forms/login.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
+import {useActions} from "../../hooks/useActions.ts";
 
-export const Login = ({setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
+export const Login = ({setIsErrorMessage, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
     const socket = useSocket();
     const loginForm = useUserJoinForm()
+
+    const {setCurrentUserId} = useActions()
 
     const handleLogin = async (values: UserJoinDto) => {
         if (!socket) return
@@ -17,8 +20,7 @@ export const Login = ({setIsErrorMessage, setIsUserId, setIsLoggedIn, handleRequ
             setIsErrorMessage('Login failed')
             return
         }
-
-        setIsUserId(data.userId)
+        setCurrentUserId(data.userId)
         setIsLoggedIn(true)
 
         await handleRequestRooms()

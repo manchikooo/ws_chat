@@ -10,16 +10,22 @@ import type {IMessage, IRoom} from "./modules/Room/types.ts";
 import {Room} from "./modules/Room/Room.tsx";
 import {emit} from "./api/socketEmit.ts";
 import {useSocket} from "./hooks/useSocket.ts";
+import {useAppSelector} from "./store/store.ts";
+import {useActions} from "./hooks/useActions.ts";
 
 function App() {
     const socket = useSocket();
+    const {setCurrentUserId} = useActions()
+
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [opened, {toggle}] = useDisclosure();
     const [isErrorMessage, setIsErrorMessage] = useState<string>('');
-    const [isUserId, setIsUserId] = useState<string>('');
+
     const [rooms, setRooms] = useState<IRoom[]>([]);
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [activeRoom, setActiveRoom] = useState<IRoom | null>(null);
+
+    const {currentUserId} = useAppSelector(state => state.userInfo)
 
     const handleRequestRooms = async () => {
         const data = await emit<IRoom[]>(socket, 'room:list');
@@ -31,6 +37,7 @@ function App() {
 
     // показываю notification, если ошибка при логине. при закрытии notification зачищаю setIsLoginError
     useEffect(() => {
+        console.log(222)
         if (isErrorMessage) {
             notifications.show({
                 title: 'Login error',
@@ -41,17 +48,17 @@ function App() {
                     notifications.clean()
                 }
             })
-        } else if (isUserId)
+        } else if (currentUserId)
             notifications.show({
                 title: 'Login success',
-                message: `Your id: '${isUserId}'`,
+                message: `Your id: '${currentUserId}'`,
                 color: 'green',
                 onClose: () => {
-                    setIsUserId('')
+                    setCurrentUserId('')
                     notifications.clean()
                 }
             })
-    }, [isErrorMessage, isUserId]);
+    }, [isErrorMessage, currentUserId]);
 
     useEffect(() => {
 
@@ -96,8 +103,7 @@ function App() {
 
             <AppShell.Main pl={isLoggedIn ? undefined : 'sm'}>
                 {!isLoggedIn ? (
-                    <Login setIsUserId={setIsUserId}
-                           setIsLoggedIn={setIsLoggedIn}
+                    <Login setIsLoggedIn={setIsLoggedIn}
                            handleRequestRooms={handleRequestRooms}
                            setIsErrorMessage={setIsErrorMessage}
                     />
