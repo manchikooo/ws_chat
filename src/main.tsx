@@ -6,12 +6,16 @@ import App from './App.tsx'
 import {MantineProvider} from '@mantine/core';
 import {Notifications} from "@mantine/notifications";
 import {SocketProvider} from "./providers/SocketProvider.tsx";
+import {store} from './store/store.ts'
+import {Provider} from "react-redux";
 
 createRoot(document.getElementById('root')!).render(
     <MantineProvider>
-        <Notifications/>
-        <SocketProvider>
-            <App/>
-        </SocketProvider>
+        <Provider store={store}>
+            <Notifications/>
+            <SocketProvider>
+                <App/>
+            </SocketProvider>
+        </Provider>
     </MantineProvider>,
 )

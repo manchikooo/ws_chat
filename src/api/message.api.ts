@@ -1,13 +1,20 @@
 import type {Socket} from "socket.io-client";
 import {emit} from "./socketEmit";
-import type {MessageSendDto} from "./types.ts";
+import type {MessageEditDto, MessageSendDto} from "./types.ts";
 
 export const messageApi = {
     send(socket: Socket, payload: MessageSendDto) {
-        return emit<{ userId: string }>(
+        return emit<{ ok: boolean, id: string }>(
             socket,
             "message:send",
             payload
         );
     },
+    edit(socket: Socket, payload: MessageEditDto) {
+        return emit<{ ok: boolean }>(
+            socket,
+            'message:edit',
+            payload
+        )
+    }
 };

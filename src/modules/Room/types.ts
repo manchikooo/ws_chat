@@ -1,8 +1,3 @@
-export type RoomProps = {
-    activeRoom: IRoom | null;
-    messages: IMessage[];
-}
-
 export type RoomType = "DIRECT" | "GROUP"
 
 export interface IRoom {
