@@ -5,12 +5,20 @@ import type {UserJoinDto} from "../../api/types.ts";
 import {useUserJoinForm} from "../../forms/login.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
 import {useActions} from "../../hooks/useActions.ts";
+import {roomApi} from "../../api/room.api.ts";
 
-export const Login = ({setIsErrorMessage, setIsLoggedIn, handleRequestRooms}: LoginProps) => {
+export const Login = ({setIsErrorMessage}: LoginProps) => {
     const socket = useSocket();
     const loginForm = useUserJoinForm()
 
-    const {setCurrentUserId} = useActions()
+    const {setCurrentUserId, setIsLoggedIn, setRooms} = useActions()
+
+    const handleRequestRooms = async () => {
+        const data = await roomApi.list(socket)
+        if (!data) return
+
+        setRooms(data);
+    }
 
     const handleLogin = async (values: UserJoinDto) => {
         if (!socket) return

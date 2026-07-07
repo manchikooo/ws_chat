@@ -1,6 +1,5 @@
 import {Button, Divider, Flex, ScrollArea, Space, Stack, TextInput, Title, UnstyledButton} from "@mantine/core";
 import {IconPlus} from "@tabler/icons-react";
-import type {RoomsProps} from "./types.ts";
 import {roomApi} from "../../api/room.api.ts";
 import type {RoomCreateDto} from "../../api/types.ts";
 import {useCreateRoomForm, useJoinRoomForm} from "../../forms/room.form.ts";
@@ -8,15 +7,22 @@ import {useSocket} from "../../hooks/useSocket.ts";
 import {useAppSelector} from "../../store/store.ts";
 import {useActions} from "../../hooks/useActions.ts";
 
-export const Rooms = ({handleRequestRooms}: RoomsProps) => {
+export const Rooms = () => {
     const socket = useSocket()
 
-    const {setMessages, setCurrentRoom} = useActions()
+    const {setMessages, setCurrentRoom, setRooms} = useActions()
 
     const {rooms} = useAppSelector(state => state.room);
 
     const createRoomForm = useCreateRoomForm()
     const joinRoomForm = useJoinRoomForm()
+
+    const handleRequestRooms = async () => {
+        const data = await roomApi.list(socket)
+        if (!data) return
+
+        setRooms(data);
+    }
 
     const handleCreateRoom = async (values: RoomCreateDto) => {
         if (!socket) return
@@ -48,10 +54,13 @@ export const Rooms = ({handleRequestRooms}: RoomsProps) => {
     }
 
     return (
-        <><Title>Rooms</Title>
-            <ScrollArea h='calc(100dvh - 100px'>
+        <>
+            <Title style={{color: 'var(--mantine-color-blue-filled)'}}>
+                Rooms
+            </Title>
+            <ScrollArea h='calc(100dvh - 100px)'>
                 <form onSubmit={createRoomForm.onSubmit(handleCreateRoom)}>
-                    <Flex align='flex-end' gap='10px' justify='center' px='10px'>
+                    <Flex align='flex-start' gap='10px' justify='center' px='10px'>
                         <TextInput
                             withAsterisk
                             label='Create room'
@@ -61,7 +70,9 @@ export const Rooms = ({handleRequestRooms}: RoomsProps) => {
                             w='100%'
                             placeholder='Room name'
                             {...createRoomForm.getInputProps('name')}/>
-                        <Button type='submit'>+</Button>
+                        <Button type='submit' mt='25px'>
+                            <IconPlus/>
+                        </Button>
                     </Flex>
                 </form>
                 <Space h='md'/>
@@ -84,7 +95,7 @@ export const Rooms = ({handleRequestRooms}: RoomsProps) => {
                         </UnstyledButton>
                     </Flex>
                 </form>
-                <Stack>
+                <Stack px='10px' pt='10px'>
                     {rooms.map((room) => (
                         <Button key={room.id} onClick={() => handleJoinRoom(room.inviteCode)}>
                             {room.name}

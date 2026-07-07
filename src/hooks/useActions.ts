@@ -1,12 +1,14 @@
 import {useDispatch} from 'react-redux';
 import {bindActionCreators} from '@reduxjs/toolkit';
-import {userInfoActions} from "../store/slice/userInfo/userInfo.slice.ts";
+import {userActions} from "../store/slice/user/user.slice.ts";
 import {roomActions} from "../store/slice/room/room.slice.ts";
+import {messageActions} from "../store/slice/message/message.slice.ts";
 
 
 const actions = {
-    ...userInfoActions,
-    ...roomActions
+    ...userActions,
+    ...roomActions,
+    ...messageActions
 };
 
 export const useActions = () => {

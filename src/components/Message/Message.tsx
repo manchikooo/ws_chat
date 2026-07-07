@@ -13,15 +13,19 @@ export const Message = ({message}: MessageProps) => {
 
     const {setMessages} = useActions()
 
-    const {currentUserId} = useAppSelector(state => state.userInfo);
-    const {messages} = useAppSelector(state => state.room);
+    const {currentUserId} = useAppSelector(state => state.user);
+    const {messages} = useAppSelector(state => state.message);
     const [editMode, setEditMode] = useState<boolean>(false);
     const [editedContent, setEditedContent] = useState<string>(message.content);
 
     const {senderId, id: messageId, content, createdAt, updatedAt} = message;
     const amISender = currentUserId === senderId;
 
+    const isContentChanged = editedContent.trim() !== content.trim();
+    const isContentEmpty = editedContent.trim().length === 0;
+
     const handleSave = useCallback(async () => {
+        if (!isContentChanged || isContentEmpty) return;
         const data = await messageApi.edit(socket, {
             messageId,
             content: editedContent
@@ -32,7 +36,7 @@ export const Message = ({message}: MessageProps) => {
         }
 
         setEditMode(false);
-    }, [messageId, socket, editedContent])
+    }, [isContentChanged, isContentEmpty, socket, messageId, editedContent])
 
     const handleCancel = useCallback(() => {
         setEditedContent(content);
@@ -42,10 +46,12 @@ export const Message = ({message}: MessageProps) => {
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault()
-            handleSave()
+            if (isContentChanged && !isContentEmpty) {
+                handleSave();
+            }
         }
         if (e.key === 'Escape') handleCancel()
-    }, [handleSave, handleCancel])
+    }, [handleCancel, isContentChanged, isContentEmpty, handleSave])
 
     const handleDoubleClick = useCallback(() => {
         if (amISender) setEditMode(true)
@@ -53,13 +59,17 @@ export const Message = ({message}: MessageProps) => {
 
     useEffect(() => {
         const handleMessageUpdated = (updatedMessage: IMessage) => {
-            const updatedMessages = messages.map(m =>
-                m.id === updatedMessage.id ? updatedMessage : m
+            const updatedMessages = messages.map(msg =>
+                msg.id === updatedMessage.id ? updatedMessage : msg
             );
             setMessages(updatedMessages);
         };
         socket.on('message:updated', handleMessageUpdated)
-    }, []);
+
+        return () => {
+            socket.off('message:updated', handleMessageUpdated)
+        }
+    }, [messages, setMessages, socket]);
 
     if (editMode) {
         return (
@@ -72,7 +82,7 @@ export const Message = ({message}: MessageProps) => {
                               autosize
                               styles={{
                                   input: {
-                                      minWidth: '250px',
+                                      minWidth: '400px',
                                   }
                               }}
                     />
@@ -82,6 +92,7 @@ export const Message = ({message}: MessageProps) => {
                             color="blue"
                             size="xs"
                             onClick={handleSave}
+                            disabled={!isContentChanged || isContentEmpty}
                         >
                             Сохранить
                         </Button>

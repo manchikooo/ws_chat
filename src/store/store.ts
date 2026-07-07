@@ -1,12 +1,14 @@
 import {configureStore} from '@reduxjs/toolkit'
 import {useDispatch, useSelector} from "react-redux";
-import {userInfoReducer} from "./slice/userInfo/userInfo.slice.ts";
+import {userReducer} from "./slice/user/user.slice.ts";
 import {roomReducer} from "./slice/room/room.slice.ts";
+import {messageReducer} from "./slice/message/message.slice.ts";
 
 export const store = configureStore({
     reducer: {
-        userInfo: userInfoReducer,
-        room: roomReducer
+        user: userReducer,
+        room: roomReducer,
+        message: messageReducer,
     },
 })
 
