@@ -3,17 +3,16 @@ import {useDisclosure} from '@mantine/hooks';
 import viteLogo from './assets/vite.svg'
 import './App.css'
 import {useEffect, useState} from "react";
-import {io, Socket} from "socket.io-client";
 import {notifications} from "@mantine/notifications";
 import {Rooms} from "./modules/Rooms/Rooms.tsx";
 import {Login} from "./modules/Login/Login.tsx";
 import type {IMessage, IRoom} from "./modules/Room/types.ts";
 import {Room} from "./modules/Room/Room.tsx";
-import {BACKEND_URL} from "./constants/URL.ts";
 import {emit} from "./api/socketEmit.ts";
+import {useSocket} from "./hooks/useSocket.ts";
 
 function App() {
-    const [socket, setSocket] = useState<Socket>();
+    const socket = useSocket();
     const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
     const [opened, {toggle}] = useDisclosure();
     const [isErrorMessage, setIsErrorMessage] = useState<string>('');
@@ -55,14 +54,11 @@ function App() {
     }, [isErrorMessage, isUserId]);
 
     useEffect(() => {
-        if (socket) return;
-        const sock = io(BACKEND_URL)
 
-        sock.on('connect', () => {
+        socket.on('connect', () => {
             console.log('Connected to server')
-            setSocket(sock)
 
-            sock.on('message:new', (message: IMessage) => {
+            socket.on('message:new', (message: IMessage) => {
                 console.log('New message', message)
                 setMessages((prevMessages) => [...prevMessages, message])
             })
@@ -91,8 +87,7 @@ function App() {
             </AppShell.Header>
 
             {isLoggedIn && <AppShell.Navbar>
-                <Rooms socket={socket}
-                       rooms={rooms}
+                <Rooms rooms={rooms}
                        handleRequestRooms={handleRequestRooms}
                        setActiveRoom={setActiveRoom}
                        setMessages={setMessages}
@@ -101,15 +96,13 @@ function App() {
 
             <AppShell.Main pl={isLoggedIn ? undefined : 'sm'}>
                 {!isLoggedIn ? (
-                    <Login socket={socket}
-                           setIsUserId={setIsUserId}
+                    <Login setIsUserId={setIsUserId}
                            setIsLoggedIn={setIsLoggedIn}
                            handleRequestRooms={handleRequestRooms}
                            setIsErrorMessage={setIsErrorMessage}
                     />
                 ) : (
-                    <Room socket={socket}
-                          activeRoom={activeRoom}
+                    <Room activeRoom={activeRoom}
                           messages={messages}
                     />
                 )}

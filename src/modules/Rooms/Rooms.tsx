@@ -4,8 +4,10 @@ import type {RoomsProps} from "./types.ts";
 import {roomApi} from "../../api/room.api.ts";
 import type {RoomCreateDto} from "../../api/types.ts";
 import {useCreateRoomForm, useJoinRoomForm} from "../../forms/room.form.ts";
+import {useSocket} from "../../hooks/useSocket.ts";
 
-export const Rooms = ({socket, rooms, handleRequestRooms, setActiveRoom, setMessages}: RoomsProps) => {
+export const Rooms = ({rooms, handleRequestRooms, setActiveRoom, setMessages}: RoomsProps) => {
+    const socket = useSocket()
     const createRoomForm = useCreateRoomForm()
     const joinRoomForm = useJoinRoomForm()
 

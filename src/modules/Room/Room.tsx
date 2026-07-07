@@ -4,8 +4,10 @@ import type {RoomProps} from "./types.ts";
 import {messageApi} from "../../api/message.api.ts";
 import type {MessageSendDto} from "../../api/types.ts";
 import {useSendMessageForm} from "../../forms/message.form.ts";
+import {useSocket} from "../../hooks/useSocket.ts";
 
-export const Room = ({socket, activeRoom, messages}: RoomProps) => {
+export const Room = ({activeRoom, messages}: RoomProps) => {
+    const socket = useSocket();
     const sendMessageForm = useSendMessageForm()
 
     const handleSubmitMessage = async (values: MessageSendDto) => {

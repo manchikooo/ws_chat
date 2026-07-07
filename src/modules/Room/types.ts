@@ -1,7 +1,4 @@
-import type {Socket} from "socket.io-client";
-
 export type RoomProps = {
-    socket: Socket | undefined;
     activeRoom: IRoom | null;
     messages: IMessage[];
 }
