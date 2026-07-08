@@ -9,7 +9,7 @@ import type {IMessage} from "../../modules/Room/types.ts";
 import {useEffect, useState, type KeyboardEvent, useCallback} from "react";
 
 export const Message = ({message}: MessageProps) => {
-    const socket = useSocket()
+    const {socket} = useSocket()
 
     const {setMessages} = useActions()
 

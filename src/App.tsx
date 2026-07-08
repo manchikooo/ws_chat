@@ -7,13 +7,13 @@ import {Rooms} from "./modules/Rooms/Rooms.tsx";
 import {Login} from "./modules/Login/Login.tsx";
 import {Room} from "./modules/Room/Room.tsx";
 import {useAppSelector} from "./store/store.ts";
+import {ConnectionStatus} from "./components/ConnectionStatus/ConnectionStatus.tsx";
 
 function App() {
     const {currentUserId, isLoggedIn} = useAppSelector(state => state.user)
 
     const [opened, {toggle}] = useDisclosure();
     const [isErrorMessage, setIsErrorMessage] = useState<string>('');
-
 
     // показываю notification, если ошибка при логине. при закрытии notification зачищаю setIsLoginError
     useEffect(() => {
@@ -39,37 +39,42 @@ function App() {
     }, [isErrorMessage, currentUserId]);
 
     return (
-        <AppShell
-            padding="md"
-            header={{height: 60}}
-            navbar={{
-                width: 300,
-                breakpoint: 'sm',
-                collapsed: {mobile: !opened},
-            }}
-        >
-            <AppShell.Header>
-                <Burger
-                    opened={opened}
-                    onClick={toggle}
-                    hiddenFrom="sm"
-                    size="sm"
-                />
-                <Image src={viteLogo} fit='contain' w={60} h={60} mr='auto'/>
-            </AppShell.Header>
+        <>
+            <AppShell
+                padding="md"
+                header={{height: 60}}
+                navbar={{
+                    width: 300,
+                    breakpoint: 'sm',
+                    collapsed: {mobile: !opened},
+                }}
+            >
 
-            {isLoggedIn && <AppShell.Navbar>
-                <Rooms/>
-            </AppShell.Navbar>}
+                <AppShell.Header>
+                    <Burger
+                        opened={opened}
+                        onClick={toggle}
+                        hiddenFrom="sm"
+                        size="sm"
+                    />
+                    <Image src={viteLogo} fit='contain' w={60} h={60} mr='auto'/>
+                </AppShell.Header>
 
-            <AppShell.Main pl={isLoggedIn ? undefined : 'sm'}>
-                {!isLoggedIn
-                    ? <Login setIsErrorMessage={setIsErrorMessage}/>
-                    : <Room/>
-                }
-            </AppShell.Main>
-        </AppShell>
+                {isLoggedIn && <AppShell.Navbar>
+                    <Rooms/>
+                </AppShell.Navbar>}
+
+                <AppShell.Main pl={isLoggedIn ? undefined : 'sm'}>
+                    {!isLoggedIn
+                        ? <Login setIsErrorMessage={setIsErrorMessage}/>
+                        : <Room/>
+                    }
+                </AppShell.Main>
+            </AppShell>
+            <ConnectionStatus/>
+        </>
     )
 }
 
 export default App
+

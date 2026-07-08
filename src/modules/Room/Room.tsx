@@ -21,7 +21,7 @@ import {useCallback, useEffect, type KeyboardEvent} from "react";
 import {useActions} from "../../hooks/useActions.ts";
 
 export const Room = () => {
-    const socket = useSocket();
+    const {socket} = useSocket();
     const {setNewMessage} = useActions();
 
     const {messages} = useAppSelector(state => state.message);

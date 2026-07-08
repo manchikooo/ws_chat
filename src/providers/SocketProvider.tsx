@@ -1,15 +1,26 @@
-import {type PropsWithChildren, useEffect, useState,} from "react";
+import {type PropsWithChildren, useEffect, useState} from "react";
 import {io} from "socket.io-client";
-import {BACKEND_URL} from "../constants/URL";
-import {SocketContext} from "./SocketContext";
-
+import {BACKEND_URL} from "../constants/URL.ts";
+import {SocketContext} from "./SocketContext.ts";
 
 export function SocketProvider({children}: PropsWithChildren) {
     const [socket] = useState(() => io(BACKEND_URL));
+    const [isConnected, setIsConnected] = useState(false);
+    const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
 
     useEffect(() => {
         socket.on("connect", () => {
-            console.log("Connected");
+            setIsConnected(true);
+            setConnectionStatus('connected');
+        });
+
+        socket.on("disconnect", () => {
+            setIsConnected(false);
+            setConnectionStatus('disconnected');
+        });
+
+        socket.on("connect_error", () => {
+            setConnectionStatus('disconnected');
         });
 
         return () => {
@@ -18,9 +29,8 @@ export function SocketProvider({children}: PropsWithChildren) {
     }, [socket]);
 
     return (
-        <SocketContext.Provider value={socket}>
+        <SocketContext.Provider value={{socket, isConnected, connectionStatus}}>
             {children}
         </SocketContext.Provider>
     );
 }
-

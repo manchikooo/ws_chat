@@ -8,7 +8,7 @@ import {useAppSelector} from "../../store/store.ts";
 import {useActions} from "../../hooks/useActions.ts";
 
 export const Rooms = () => {
-    const socket = useSocket()
+    const {socket} = useSocket()
 
     const {setMessages, setCurrentRoom, setRooms} = useActions()
 

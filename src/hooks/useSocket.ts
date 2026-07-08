@@ -1,12 +1,27 @@
 import {useContext} from "react";
-import {SocketContext} from "../providers/SocketContext.ts";
+import {SocketContext, type ConnectionStatusType} from "../providers/SocketContext.ts";
+import type {Socket} from "socket.io-client";
 
-export function useSocket() {
-    const socket = useContext(SocketContext);
+interface UseSocketReturn {
+    socket: Socket;
+    isConnected: boolean;
+    connectionStatus: ConnectionStatusType;
+}
 
-    if (!socket) {
+export function useSocket(): UseSocketReturn {
+    const context = useContext(SocketContext);
+
+    if (!context) {
         throw new Error("SocketProvider is missing");
     }
 
-    return socket;
+    if (!context.socket) {
+        throw new Error("Socket is not initialized");
+    }
+
+    return {
+        socket: context.socket,
+        isConnected: context.isConnected,
+        connectionStatus: context.connectionStatus
+    };
 }

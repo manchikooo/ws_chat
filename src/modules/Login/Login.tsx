@@ -8,7 +8,7 @@ import {useActions} from "../../hooks/useActions.ts";
 import {roomApi} from "../../api/room.api.ts";
 
 export const Login = ({setIsErrorMessage}: LoginProps) => {
-    const socket = useSocket();
+    const {socket} = useSocket();
     const loginForm = useUserJoinForm()
 
     const {setCurrentUserId, setIsLoggedIn, setRooms} = useActions()
