@@ -99,7 +99,7 @@ export const Room = () => {
 
             <ScrollArea h='100%' offsetScrollbars>
                 {messages.map((message) => (
-                    <Message message={message} key={message.id}/>
+                    <Message messageId={message.id} key={message.id}/>
                 ))}
             </ScrollArea>
 
