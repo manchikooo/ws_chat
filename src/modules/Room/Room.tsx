@@ -21,7 +21,7 @@ import {useCallback, useEffect, type KeyboardEvent} from "react";
 import {useActions} from "../../hooks/useActions.ts";
 
 export const Room = () => {
-    const socket = useSocket();
+    const {socket} = useSocket();
     const {setNewMessage} = useActions();
 
     const {messages} = useAppSelector(state => state.message);
@@ -99,7 +99,7 @@ export const Room = () => {
 
             <ScrollArea h='100%' offsetScrollbars>
                 {messages.map((message) => (
-                    <Message message={message} key={message.id}/>
+                    <Message messageId={message.id} key={message.id}/>
                 ))}
             </ScrollArea>
 
