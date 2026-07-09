@@ -1,146 +1,49 @@
 import {Button, Divider, Flex, ScrollArea, Space, Stack, TextInput, Title} from "@mantine/core";
 import {IconPlus} from "@tabler/icons-react";
-import {roomApi} from "../../api/room.api.ts";
 import type {RoomCreateDto} from "../../api/types.ts";
 import {useCreateRoomForm, useJoinRoomForm} from "../../forms/room.form.ts";
-import {useSocket} from "../../hooks/useSocket.ts";
 import {useAppSelector} from "../../store/store.ts";
-import {useActions} from "../../hooks/useActions.ts";
-import {memo} from "react";
-import type {IRoom} from "../Room/types.ts";
+import {useRoomApi} from "../../hooks/api/useRoomApi.ts";
+import {
+    selectCreateRoomError,
+    selectIsCreateRoomLoading,
+    selectIsJoinByInviteCodeLoading,
+    selectIsRoomsLoading, selectJoinByInviteCodeError,
+    selectRooms
+} from "../../store/slice/room/room.selectors.ts";
+import {RoomButton} from "./components/RoomButton/RoomButton.tsx";
 
-type RoomButtonProps = {
-    room: IRoom;
-    isRoomsLoading: boolean;
-    onJoinRoom: (inviteCode: string, requestKey: `joinByRoomButton-${string}`) => void;
-};
-
-const RoomButton = memo(({room, isRoomsLoading, onJoinRoom}: RoomButtonProps) => {
-    const isJoinByRoomButtonLoading = useAppSelector(
-        state => state.room.loadingByKey[`joinByRoomButton-${room.id}`] ?? false
-    );
-
-    return (
-        <Button
-            onClick={() => onJoinRoom(room.inviteCode, `joinByRoomButton-${room.id}`)}
-            loading={isJoinByRoomButtonLoading}
-            disabled={isRoomsLoading}
-        >
-            {room.name}
-        </Button>
-    );
-});
 
 export const Rooms = () => {
-    const {socket} = useSocket();
+    const {create, join} = useRoomApi();
 
-    const {setMessages, setCurrentRoom, setRooms, setRoomRequestState} = useActions();
-
-    const {rooms} = useAppSelector(state => state.room);
-    const isRoomsLoading = useAppSelector(state => state.room.loadingByKey.list ?? false);
-    const isCreateRoomLoading = useAppSelector(state => state.room.loadingByKey.create ?? false);
-    const isJoinByInviteCodeLoading = useAppSelector(state => state.room.loadingByKey.joinByInviteCode ?? false);
-
+    const rooms = useAppSelector(selectRooms);
+    const isRoomsLoading = useAppSelector(selectIsRoomsLoading);
+    const isCreateRoomLoading = useAppSelector(selectIsCreateRoomLoading);
+    const isJoinByInviteCodeLoading = useAppSelector(selectIsJoinByInviteCodeLoading);
+    const joinByInviteCodeError = useAppSelector(selectJoinByInviteCodeError)
+    const createRoomError = useAppSelector(selectCreateRoomError)
     const createRoomForm = useCreateRoomForm();
     const joinRoomForm = useJoinRoomForm();
 
-    const handleRequestRooms = async () => {
-        setRoomRequestState({key: "list", isLoading: true});
-
-        try {
-            const data = await roomApi.list(socket);
-
-            if (!data) {
-                setRoomRequestState({
-                    key: "list",
-                    isLoading: false,
-                    error: "Не удалось загрузить список комнат"
-                });
-                return;
-            }
-
-            setRooms(data);
-        } catch {
-            setRoomRequestState({
-                key: "list",
-                isLoading: false,
-                error: "Произошла ошибка при загрузке списка комнат"
-            });
-        } finally {
-            setRoomRequestState({key: "list", isLoading: false});
-        }
-    };
-
     const handleCreateRoom = async (values: RoomCreateDto) => {
-        setRoomRequestState({key: "create", isLoading: true});
+        const room = await create(values);
 
-        try {
-            const data = await roomApi.create(socket, values);
+        if (!room) return;
 
-            if (!data) {
-                setRoomRequestState({
-                    key: "create",
-                    isLoading: false,
-                    error: "Не удалось создать комнату"
-                });
-                return;
-            }
-
-            createRoomForm.reset();
-            await handleRequestRooms();
-        } catch {
-            setRoomRequestState({
-                key: "create",
-                isLoading: false,
-                error: "Произошла ошибка при создании комнаты"
-            });
-        } finally {
-            setRoomRequestState({key: "create", isLoading: false});
-        }
+        createRoomForm.reset();
     };
 
     const handleJoinRoom = async (
         inviteCode: string,
         requestKey: "joinByInviteCode" | `joinByRoomButton-${string}`
     ) => {
-        setCurrentRoom(null);
-        setMessages([]);
-        setRoomRequestState({key: requestKey, isLoading: true});
+        const response = await join({inviteCode}, requestKey);
 
-        try {
-            const data = await roomApi.join(socket, {inviteCode});
+        if (!response) return;
 
-            if (!data) {
-                setRoomRequestState({
-                    key: requestKey,
-                    isLoading: false,
-                    error: "Не удалось подключиться к чату"
-                });
-                return;
-            }
-
-            setCurrentRoom(data.room);
-
-            const messagesHistory = await roomApi.history(socket, {roomId: data.room.id});
-
-            if (!messagesHistory) {
-                setRoomRequestState({
-                    key: requestKey,
-                    isLoading: false,
-                    error: "Не удалось загрузить историю сообщений"
-                });
-                return;
-            }
-
-            setMessages(messagesHistory.messages);
-        } catch {
-            setRoomRequestState({
-                key: requestKey,
-                isLoading: false,
-                error: "Произошла ошибка при подключении к чату"
-            });
-        } finally {
-            setRoomRequestState({key: requestKey, isLoading: false});
+        if (requestKey === "joinByInviteCode") {
+            joinRoomForm.reset();
         }
     };
 
@@ -162,6 +65,7 @@ export const Rooms = () => {
                             w="100%"
                             placeholder="Room name"
                             {...createRoomForm.getInputProps("name")}
+                            error={createRoomForm.errors.name || createRoomError}
                         />
                         <Button type="submit" mt="25px" loading={isCreateRoomLoading}>
                             <IconPlus/>
@@ -178,7 +82,7 @@ export const Rooms = () => {
                         handleJoinRoom(values.inviteCode, "joinByInviteCode")
                     )}
                 >
-                    <Flex align="flex-end" gap="10px" justify="center" px="10px">
+                    <Flex align="flex-start" gap="10px" justify="center" px="10px">
                         <TextInput
                             withAsterisk
                             label="Join room"
@@ -188,6 +92,7 @@ export const Rooms = () => {
                             placeholder="Invite code"
                             w="100%"
                             {...joinRoomForm.getInputProps("inviteCode")}
+                            error={joinRoomForm.errors.inviteCode || joinByInviteCodeError}
                         />
                         <Button type="submit" mt="25px" loading={isJoinByInviteCodeLoading}>
                             <IconPlus/>

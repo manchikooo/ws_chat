@@ -1,12 +1,38 @@
 import type {Socket} from "socket.io-client";
 
+export type EmitResult<T> =
+    | {
+    ok: true;
+    data: T;
+}
+    | {
+    ok: false;
+    error: string;
+};
+
+type ErrorResponse = {
+    error: string;
+};
+
+const isErrorResponse = (value: unknown): value is ErrorResponse => {
+    return (
+        typeof value === "object" &&
+        value !== null &&
+        "error" in value &&
+        typeof value.error === "string"
+    );
+};
+
 export async function emit<T>(
     socket: Socket | undefined,
     event: string,
     payload?: unknown
-): Promise<T | null> {
+): Promise<EmitResult<T>> {
     if (!socket) {
-        return null;
+        return {
+            ok: false,
+            error: "Socket is not initialized"
+        };
     }
 
     try {
@@ -15,14 +41,21 @@ export async function emit<T>(
                 ? await socket.emitWithAck(event)
                 : await socket.emitWithAck(event, payload);
 
-        if (res && typeof res === "object" && "error" in res) {
-            console.warn(res.error);
-            return null;
+        if (isErrorResponse(res)) {
+            return {
+                ok: false,
+                error: res.error
+            };
         }
 
-        return res as T;
+        return {
+            ok: true,
+            data: res as T
+        };
     } catch (e) {
-        console.error(e);
-        return null;
+        return {
+            ok: false,
+            error: e instanceof Error ? e.message : "Unknown socket error"
+        };
     }
 }

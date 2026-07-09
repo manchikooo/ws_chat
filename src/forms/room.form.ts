@@ -6,7 +6,7 @@ export function useCreateRoomForm() {
     return useForm<RoomCreateDto>({
         initialValues: {
             name: '',
-            type: 'GROUP' as RoomType
+            type: 'DIRECT' as RoomType
         },
         validate: {
             name: (value: string) =>

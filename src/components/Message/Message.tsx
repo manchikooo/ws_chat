@@ -1,64 +1,47 @@
 import type {MessageProps} from "./types.ts";
 import {useAppSelector} from "../../store/store.ts";
-import {useSocket} from "../../hooks/useSocket.ts";
-import {messageApi} from "../../api/message.api.ts";
 import {useActions} from "../../hooks/useActions.ts";
 import type {IMessage} from "../../modules/Room/types.ts";
-import {useEffect, useCallback, memo} from "react";
+import {useEffect, useCallback, memo, useMemo} from "react";
 import {MessageView} from "./MessageView.tsx";
 import {MessageEditor} from "./MessageEditor.tsx";
+import {useSocket} from "../../hooks/useSocket.ts";
+import {useMessageApi} from "../../hooks/api/useMessageApi.ts";
+import {
+    makeSelectMessageById,
+    selectEditingMessageId,
+    selectIsEditMessageLoading,
+    selectMessages
+} from "../../store/slice/message/message.selectors.ts";
+import {selectCurrentUserId} from "../../store/slice/user/user.selectors.ts";
 
 const MessageComponent = ({messageId}: MessageProps) => {
-    const {socket} = useSocket();
-    const {setMessages, setMessageRequestState, setEditingMessageId} = useActions();
+    const {edit, updateMessageInStore} = useMessageApi()
+    const {socket} = useSocket()
+    const {setEditingMessageId} = useActions();
 
-    const {currentUserId} = useAppSelector(state => state.user);
-    const {messages, loadingByKey, editingMessageId} = useAppSelector(state => state.message);
+    const selectMessageById = useMemo(() => makeSelectMessageById(), []);
 
-    const message = useAppSelector(state =>
-        state.message.messages.find(m => m.id === messageId)
-    );
-
-    const isEditMessageLoading = loadingByKey.edit ?? false;
+    const currentUserId = useAppSelector(selectCurrentUserId);
+    const messages = useAppSelector(selectMessages);
+    const editingMessageId = useAppSelector(selectEditingMessageId);
+    const isEditMessageLoading = useAppSelector(selectIsEditMessageLoading);
+    const message = useAppSelector(state => selectMessageById(state, messageId));
 
     const senderId = message?.senderId;
     const actualMessageId = message?.id;
-
     const amISender = currentUserId === senderId;
-
     const editMode = editingMessageId === actualMessageId;
 
     const handleSave = useCallback(async (newContent: string) => {
         if (!actualMessageId) return;
 
-        setMessageRequestState({key: "edit", isLoading: true});
+        const updatedMessage = await edit(actualMessageId, newContent);
 
-        try {
-            const data = await messageApi.edit(socket, {
-                messageId: actualMessageId,
-                content: newContent
-            });
+        if (!updatedMessage) return;
 
-            if (!data) {
-                setMessageRequestState({
-                    key: "edit",
-                    isLoading: false,
-                    error: "Не удалось изменить сообщение"
-                });
-                return;
-            }
-
-            setEditingMessageId(null);
-        } catch {
-            setMessageRequestState({
-                key: "edit",
-                isLoading: false,
-                error: "Произошла ошибка при изменении сообщения"
-            });
-        } finally {
-            setMessageRequestState({key: "edit", isLoading: false});
-        }
-    }, [socket, actualMessageId, setMessageRequestState, setEditingMessageId]);
+        setEditingMessageId(null);
+    }, [actualMessageId, edit, setEditingMessageId]);
 
     const handleCancel = useCallback(() => {
         setEditingMessageId(null);
@@ -71,12 +54,10 @@ const MessageComponent = ({messageId}: MessageProps) => {
     }, [amISender, actualMessageId, setEditingMessageId]);
 
     useEffect(() => {
-        const handleMessageUpdated = (updatedMessage: IMessage) => {
-            const updatedMessages = messages.map(msg =>
-                msg.id === updatedMessage.id ? updatedMessage : msg
-            );
+        if (!socket) return;
 
-            setMessages(updatedMessages);
+        const handleMessageUpdated = (updatedMessage: IMessage) => {
+            updateMessageInStore(messages, updatedMessage);
         };
 
         socket.on("message:updated", handleMessageUpdated);
@@ -84,7 +65,7 @@ const MessageComponent = ({messageId}: MessageProps) => {
         return () => {
             socket.off("message:updated", handleMessageUpdated);
         };
-    }, [messages, setMessages, socket]);
+    }, [messages, socket, updateMessageInStore]);
 
     if (!message) return null;
 

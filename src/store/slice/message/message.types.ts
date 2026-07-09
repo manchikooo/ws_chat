@@ -7,4 +7,4 @@ export interface IInitialState {
     editingMessageId: string | null
 }
 
-export type MessageRequestKey = "edit" | "send";
+export type MessageRequestKey = "edit" | "send" | "delete";

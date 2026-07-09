@@ -3,18 +3,18 @@ import {emit} from "./socketEmit";
 import type {MessageEditDto, MessageSendDto} from "./types.ts";
 
 export const messageApi = {
-    send(socket: Socket, payload: MessageSendDto) {
-        return emit<{ ok: boolean, id: string }>(
+    send(socket: Socket | undefined, payload: MessageSendDto) {
+        return emit<{ ok: boolean; id: string }>(
             socket,
             "message:send",
             payload
         );
     },
-    edit(socket: Socket, payload: MessageEditDto) {
+    edit(socket: Socket | undefined, payload: MessageEditDto) {
         return emit<{ ok: boolean }>(
             socket,
-            'message:edit',
+            "message:edit",
             payload
-        )
+        );
     }
 };

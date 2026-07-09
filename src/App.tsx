@@ -8,9 +8,11 @@ import {Login} from "./modules/Login/Login.tsx";
 import {Room} from "./modules/Room/Room.tsx";
 import {useAppSelector} from "./store/store.ts";
 import {ConnectionStatus} from "./components/ConnectionStatus/ConnectionStatus.tsx";
+import {selectCurrentUserId, selectIsLoggedIn} from "./store/slice/user/user.selectors.ts";
 
 function App() {
-    const {currentUserId, isLoggedIn} = useAppSelector(state => state.user)
+    const currentUserId = useAppSelector(selectCurrentUserId)
+    const isLoggedIn = useAppSelector(selectIsLoggedIn)
 
     const [opened, {toggle}] = useDisclosure();
     const [isErrorMessage, setIsErrorMessage] = useState<string>('');

@@ -19,23 +19,20 @@ export const roomSlice = createSlice({
         setCurrentRoom(state, action: PayloadAction<IRoom | null>) {
             state.currentRoom = action.payload;
         },
-        setRoomRequestState(
+        setRoomLoading(
             state,
-            action: PayloadAction<{
-                key: RoomRequestKey;
-                isLoading: boolean;
-                error?: string;
-            }>
+            action: PayloadAction<{ key: RoomRequestKey; isLoading: boolean }>
         ) {
-            const {key, isLoading, error} = action.payload;
-
-            state.loadingByKey[key] = isLoading;
-
-            if (error) {
-                state.errorByKey[key] = error;
-            } else {
-                delete state.errorByKey[key];
-            }
+            state.loadingByKey[action.payload.key] = action.payload.isLoading;
+        },
+        setRoomError(
+            state,
+            action: PayloadAction<{ key: RoomRequestKey; error: string }>
+        ) {
+            state.errorByKey[action.payload.key] = action.payload.error;
+        },
+        clearRoomError(state, action: PayloadAction<RoomRequestKey>) {
+            delete state.errorByKey[action.payload];
         }
     }
 });
