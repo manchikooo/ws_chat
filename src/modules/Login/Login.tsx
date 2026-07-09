@@ -1,48 +1,26 @@
 import {Button, Space, Stack, TextInput} from "@mantine/core";
 import type {LoginProps} from "./types.ts";
-import {userApi} from "../../api/user.api.ts";
 import type {UserJoinDto} from "../../api/types.ts";
 import {useUserJoinForm} from "../../forms/login.form.ts";
-import {useSocket} from "../../hooks/useSocket.ts";
-import {useActions} from "../../hooks/useActions.ts";
-import {roomApi} from "../../api/room.api.ts";
 import {useAppSelector} from "../../store/store.ts";
+import {useUserApi} from "../../hooks/api/useUserApi.ts";
+import {selectIsUserLoading, selectUserError} from "../../store/slice/user/user.selectors.ts";
 
 export const Login = ({setIsErrorMessage}: LoginProps) => {
-    const {socket} = useSocket();
+    const {join} = useUserApi();
     const loginForm = useUserJoinForm()
 
-    const {isLoading} = useAppSelector(state => state.user)
-
-    const {setCurrentUserId, setIsLoggedIn, setRooms, setUserLoading, setUserError, clearUserError} = useActions()
-
-    const handleRequestRooms = async () => {
-        const data = await roomApi.list(socket)
-        if (!data) return
-
-        setRooms(data);
-    }
+    const isLoading = useAppSelector(selectIsUserLoading);
+    const userError = useAppSelector(selectUserError);
 
     const handleLogin = async (values: UserJoinDto) => {
-        setUserLoading(true);
-        clearUserError();
+        const user = await join(values);
 
-        try {
-            const data = await userApi.join(socket, values)
-            if (!data) {
-                setUserError("Не удалось авторизоваться");
-                setIsErrorMessage('Login failed')
-                return;
-            }
-            setCurrentUserId(data.userId)
-            setIsLoggedIn(true)
-        } catch {
-            setUserError("Произошла ошибка при изменении сообщения");
-        } finally {
-            setUserLoading(false);
+        if (!user) {
+            setIsErrorMessage("Login failed");
+            return;
         }
-        await handleRequestRooms()
-    }
+    };
 
     return (
         <Stack mt={80} align='center' justify='center'>
@@ -51,6 +29,7 @@ export const Login = ({setIsErrorMessage}: LoginProps) => {
                     withAsterisk
                     label="Name"
                     placeholder="Your name"
+                    error={userError}
                     {...loginForm.getInputProps('name')}
                 />
                 <Space h='md'/>

@@ -2,6 +2,8 @@ import {ActionIcon, Button, Flex, Textarea} from "@mantine/core";
 import {IconX} from "@tabler/icons-react";
 import {useState, type KeyboardEvent} from "react";
 import type {MessageEditorProps} from "./types.ts";
+import {useAppSelector} from "../../store/store.ts";
+import {selectMessageError} from "../../store/slice/message/message.selectors.ts";
 
 export const MessageEditor = ({
                                   initialContent,
@@ -10,6 +12,8 @@ export const MessageEditor = ({
                                   onSave,
                                   onCancel
                               }: MessageEditorProps) => {
+    const editError = useAppSelector(selectMessageError("edit"));
+
     const [editedContent, setEditedContent] = useState(initialContent);
 
     const isContentChanged = editedContent.trim() !== initialContent.trim();
@@ -44,6 +48,7 @@ export const MessageEditor = ({
                             minWidth: "400px"
                         }
                     }}
+                    error={editError}
                 />
 
                 <Flex gap="5px">
