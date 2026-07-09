@@ -6,17 +6,40 @@ import {useCreateRoomForm, useJoinRoomForm} from "../../forms/room.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
 import {useAppSelector} from "../../store/store.ts";
 import {useActions} from "../../hooks/useActions.ts";
+import {memo} from "react";
+import type {IRoom} from "../../modules/Room/types.ts";
+
+type RoomButtonProps = {
+    room: IRoom;
+    isRoomsLoading: boolean;
+    onJoinRoom: (inviteCode: string, requestKey: `joinByRoomButton-${string}`) => void;
+};
+
+const RoomButton = memo(({room, isRoomsLoading, onJoinRoom}: RoomButtonProps) => {
+    const isJoinByRoomButtonLoading = useAppSelector(
+        state => state.room.loadingByKey[`joinByRoomButton-${room.id}`] ?? false
+    );
+
+    return (
+        <Button
+            onClick={() => onJoinRoom(room.inviteCode, `joinByRoomButton-${room.id}`)}
+            loading={isJoinByRoomButtonLoading}
+            disabled={isRoomsLoading}
+        >
+            {room.name}
+        </Button>
+    );
+});
 
 export const Rooms = () => {
     const {socket} = useSocket();
 
     const {setMessages, setCurrentRoom, setRooms, setRoomRequestState} = useActions();
 
-    const {rooms, loadingByKey} = useAppSelector(state => state.room);
-
-    const isRoomsLoading = loadingByKey.list ?? false;
-    const isCreateRoomLoading = loadingByKey.create ?? false;
-    const isJoinByInviteCodeLoading = loadingByKey.joinByInviteCode ?? false;
+    const rooms = useAppSelector(state => state.room.rooms);
+    const isRoomsLoading = useAppSelector(state => state.room.loadingByKey.list ?? false);
+    const isCreateRoomLoading = useAppSelector(state => state.room.loadingByKey.create ?? false);
+    const isJoinByInviteCodeLoading = useAppSelector(state => state.room.loadingByKey.joinByInviteCode ?? false);
 
     const createRoomForm = useCreateRoomForm();
     const joinRoomForm = useJoinRoomForm();
@@ -174,14 +197,12 @@ export const Rooms = () => {
 
                 <Stack px="10px" pt="10px">
                     {rooms.map((room) => (
-                        <Button
+                        <RoomButton
                             key={room.id}
-                            onClick={() => handleJoinRoom(room.inviteCode, `joinByRoomButton-${room.id}`)}
-                            loading={loadingByKey[`joinByRoomButton-${room.id}`] ?? false}
-                            disabled={isRoomsLoading || isJoinByInviteCodeLoading}
-                        >
-                            {room.name}
-                        </Button>
+                            room={room}
+                            isRoomsLoading={isRoomsLoading}
+                            onJoinRoom={handleJoinRoom}
+                        />
                     ))}
                 </Stack>
             </ScrollArea>
