@@ -6,12 +6,15 @@ import {useUserJoinForm} from "../../forms/login.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
 import {useActions} from "../../hooks/useActions.ts";
 import {roomApi} from "../../api/room.api.ts";
+import {useAppSelector} from "../../store/store.ts";
 
 export const Login = ({setIsErrorMessage}: LoginProps) => {
     const {socket} = useSocket();
     const loginForm = useUserJoinForm()
 
-    const {setCurrentUserId, setIsLoggedIn, setRooms} = useActions()
+    const {isLoading} = useAppSelector(state => state.user)
+
+    const {setCurrentUserId, setIsLoggedIn, setRooms, setUserLoading, setUserError, clearUserError} = useActions()
 
     const handleRequestRooms = async () => {
         const data = await roomApi.list(socket)
@@ -21,16 +24,23 @@ export const Login = ({setIsErrorMessage}: LoginProps) => {
     }
 
     const handleLogin = async (values: UserJoinDto) => {
-        if (!socket) return
+        setUserLoading(true);
+        clearUserError();
 
-        const data = await userApi.join(socket, values)
-        if (!data) {
-            setIsErrorMessage('Login failed')
-            return
+        try {
+            const data = await userApi.join(socket, values)
+            if (!data) {
+                setUserError("Не удалось авторизоваться");
+                setIsErrorMessage('Login failed')
+                return;
+            }
+            setCurrentUserId(data.userId)
+            setIsLoggedIn(true)
+        } catch {
+            setUserError("Произошла ошибка при изменении сообщения");
+        } finally {
+            setUserLoading(false);
         }
-        setCurrentUserId(data.userId)
-        setIsLoggedIn(true)
-
         await handleRequestRooms()
     }
 
@@ -44,7 +54,9 @@ export const Login = ({setIsErrorMessage}: LoginProps) => {
                     {...loginForm.getInputProps('name')}
                 />
                 <Space h='md'/>
-                <Button fullWidth type='submit'>Login</Button>
+                <Button fullWidth type='submit' loading={isLoading}>
+                    Login
+                </Button>
             </form>
         </Stack>
     );

@@ -1,14 +1,4 @@
-import {
-    Button,
-    CopyButton,
-    Flex,
-    ScrollArea,
-    Stack,
-    Text,
-    Textarea,
-    Title,
-    UnstyledButton
-} from "@mantine/core";
+import {Button, CopyButton, Flex, ScrollArea, Stack, Text, Textarea, Title} from "@mantine/core";
 import {IconCheck, IconCopy, IconSend} from "@tabler/icons-react";
 import type {IMessage} from "./types.ts";
 import {messageApi} from "../../api/message.api.ts";
@@ -17,58 +7,77 @@ import {useSendMessageForm} from "../../forms/message.form.ts";
 import {useSocket} from "../../hooks/useSocket.ts";
 import {Message} from "../../components/Message/Message.tsx";
 import {useAppSelector} from "../../store/store.ts";
-import {useCallback, useEffect, type KeyboardEvent} from "react";
+import {type KeyboardEvent, useCallback, useEffect} from "react";
 import {useActions} from "../../hooks/useActions.ts";
 
 export const Room = () => {
     const {socket} = useSocket();
-    const {setNewMessage} = useActions();
+    const {setNewMessage, setMessageRequestState} = useActions();
 
-    const {messages} = useAppSelector(state => state.message);
+    const {messages, loadingByKey} = useAppSelector(state => state.message);
+    const isSendMessageLoading = loadingByKey.send ?? false;
+
     const {currentRoom} = useAppSelector(state => state.room);
 
     const sendMessageForm = useSendMessageForm();
 
-    const handleSubmitMessage = useCallback(async (values: MessageSendDto) => {
-        if (!currentRoom || !socket) return;
+    const handleSendMessage = useCallback(async (values: MessageSendDto) => {
+        if (!currentRoom) return;
 
-        const data = await messageApi.send(socket, {
-            content: values.content,
-            roomId: currentRoom.id
-        });
+        setMessageRequestState({key: "send", isLoading: true});
 
-        if (!data) return;
-        sendMessageForm.reset();
-    }, [currentRoom, socket, sendMessageForm]);
+        try {
+            const data = await messageApi.send(socket, {
+                content: values.content,
+                roomId: currentRoom.id
+            });
 
-    const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter') {
-            if (e.shiftKey) {
+            if (!data) {
+                setMessageRequestState({
+                    key: "send",
+                    isLoading: false,
+                    error: "Не удалось отправить сообщение"
+                });
                 return;
             }
-            e.preventDefault();
-            sendMessageForm.onSubmit(handleSubmitMessage)();
+
+            sendMessageForm.reset();
+        } catch {
+            setMessageRequestState({
+                key: "send",
+                isLoading: false,
+                error: "Произошла ошибка при отправке сообщения"
+            });
+        } finally {
+            setMessageRequestState({key: "send", isLoading: false});
         }
-    }, [sendMessageForm, handleSubmitMessage]);
+    }, [currentRoom, socket, sendMessageForm, setMessageRequestState]);
+
+    const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter") {
+            if (e.shiftKey) return;
+
+            e.preventDefault();
+            sendMessageForm.onSubmit(handleSendMessage)();
+        }
+    }, [sendMessageForm, handleSendMessage]);
 
     useEffect(() => {
-        if (!socket) return;
-
         const handleNewMessage = (message: IMessage) => {
             setNewMessage(message);
         };
 
-        socket.on('message:new', handleNewMessage);
+        socket.on("message:new", handleNewMessage);
 
         return () => {
-            socket.off('message:new', handleNewMessage);
+            socket.off("message:new", handleNewMessage);
         };
     }, [socket, setNewMessage]);
 
     if (!currentRoom) {
         return (
-            <Stack h='calc(100dvh - 100px)'>
-                <Text c='dimmed' ta='center' mt='xl'>
+            <Stack h="calc(100dvh - 100px)">
+                <Text c="dimmed" ta="center" mt="xl">
                     Select a room to start chatting
                 </Text>
             </Stack>
@@ -76,18 +85,20 @@ export const Room = () => {
     }
 
     return (
-        <Stack h='calc(100dvh - 100px)'>
+        <Stack h="calc(100dvh - 100px)">
             <Flex direction="column">
-                <Title style={{color: 'var(--mantine-color-blue-filled)'}}>
+                <Title style={{color: "var(--mantine-color-blue-filled)"}}>
                     {currentRoom.name || currentRoom.id} - {currentRoom.memberCount}
                 </Title>
-                <Flex align='center' gap='5px' m='auto'>
+
+                <Flex align="center" gap="5px" m="auto">
                     <Text>Invite code: {currentRoom.inviteCode}</Text>
+
                     <CopyButton value={currentRoom.inviteCode}>
                         {({copied, copy}) => (
                             <Button
-                                size='xs'
-                                color={copied ? 'teal' : 'blue'}
+                                size="xs"
+                                color={copied ? "teal" : "blue"}
                                 onClick={copy}
                             >
                                 {copied ? <IconCheck size={16}/> : <IconCopy size={16}/>}
@@ -97,25 +108,31 @@ export const Room = () => {
                 </Flex>
             </Flex>
 
-            <ScrollArea h='100%' offsetScrollbars>
+            <ScrollArea h="100%" offsetScrollbars>
                 {messages.map((message) => (
                     <Message messageId={message.id} key={message.id}/>
                 ))}
             </ScrollArea>
 
-            <form onSubmit={sendMessageForm.onSubmit(handleSubmitMessage)}>
-                <Flex align='flex-end' gap='10px'>
+            <form onSubmit={sendMessageForm.onSubmit(handleSendMessage)}>
+                <Flex align="flex-end" gap="10px">
                     <Textarea
-                        style={{width: '100%'}}
+                        style={{width: "100%"}}
                         autosize
-                        label='Message'
-                        placeholder='Your message (Enter to send, Shift+Enter for new line)'
+                        label="Message"
+                        placeholder="Your message (Enter to send, Shift+Enter for new line)"
                         onKeyDown={handleKeyDown}
-                        {...sendMessageForm.getInputProps('content')}
+                        {...sendMessageForm.getInputProps("content")}
                     />
-                    <UnstyledButton type='submit'>
+
+                    <Button
+                        type="submit"
+                        variant="filled"
+                        color="blue"
+                        loading={isSendMessageLoading}
+                    >
                         <IconSend/>
-                    </UnstyledButton>
+                    </Button>
                 </Flex>
             </form>
         </Stack>

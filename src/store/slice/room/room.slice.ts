@@ -1,14 +1,16 @@
 import type {IRoom} from "../../../modules/Room/types.ts";
-import type {IInitialState} from "./room.types.ts";
+import type {IInitialState, RoomRequestKey} from "./room.types.ts";
 import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
 
 const initialState: IInitialState = {
     rooms: [],
-    currentRoom: null
+    currentRoom: null,
+    loadingByKey: {},
+    errorByKey: {}
 };
 
 export const roomSlice = createSlice({
-    name: 'room/slice',
+    name: "room/slice",
     initialState,
     reducers: {
         setRooms(state, action: PayloadAction<IRoom[]>) {
@@ -16,6 +18,24 @@ export const roomSlice = createSlice({
         },
         setCurrentRoom(state, action: PayloadAction<IRoom | null>) {
             state.currentRoom = action.payload;
+        },
+        setRoomRequestState(
+            state,
+            action: PayloadAction<{
+                key: RoomRequestKey;
+                isLoading: boolean;
+                error?: string;
+            }>
+        ) {
+            const {key, isLoading, error} = action.payload;
+
+            state.loadingByKey[key] = isLoading;
+
+            if (error) {
+                state.errorByKey[key] = error;
+            } else {
+                delete state.errorByKey[key];
+            }
         }
     }
 });
