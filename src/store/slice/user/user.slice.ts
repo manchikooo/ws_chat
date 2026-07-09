@@ -3,7 +3,9 @@ import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
 
 const initialState: IInitialState = {
     currentUserId: '',
-    isLoggedIn: false
+    isLoggedIn: false,
+    isLoading: false,
+    error: undefined
 };
 
 export const userSlice = createSlice({
@@ -15,7 +17,16 @@ export const userSlice = createSlice({
         },
         setIsLoggedIn(state, action: PayloadAction<boolean>) {
             state.isLoggedIn = action.payload;
-        }
+        },
+        setUserLoading(state, action: PayloadAction<boolean>) {
+            state.isLoading = action.payload;
+        },
+        setUserError(state, action: PayloadAction<string | undefined>) {
+            state.error = action.payload;
+        },
+        clearUserError(state) {
+            state.error = undefined;
+        },
     }
 });
 

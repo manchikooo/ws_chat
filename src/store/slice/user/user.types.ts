@@ -1,4 +1,6 @@
 export interface IInitialState {
     currentUserId: string;
-    isLoggedIn: boolean
+    isLoggedIn: boolean;
+    isLoading: boolean;
+    error?: string
 }

@@ -7,6 +7,7 @@ export interface MessageProps {
 export interface MessageEditorProps {
     initialContent: string;
     amISender: boolean;
+    isLoading: boolean;
     onSave: (content: string) => void;
     onCancel: () => void;
 }
