@@ -4,18 +4,16 @@ import {useSocket} from "../../hooks/useSocket.ts";
 import {messageApi} from "../../api/message.api.ts";
 import {useActions} from "../../hooks/useActions.ts";
 import type {IMessage} from "../../modules/Room/types.ts";
-import {useEffect, useState, useCallback, memo} from "react";
+import {useEffect, useCallback, memo} from "react";
 import {MessageView} from "./MessageView.tsx";
 import {MessageEditor} from "./MessageEditor.tsx";
 
-const messageEditEvents = new EventTarget();
-
 const MessageComponent = ({messageId}: MessageProps) => {
     const {socket} = useSocket();
-    const {setMessages, setMessageRequestState} = useActions();
+    const {setMessages, setMessageRequestState, setEditingMessageId} = useActions();
 
     const {currentUserId} = useAppSelector(state => state.user);
-    const {messages, loadingByKey} = useAppSelector(state => state.message);
+    const {messages, loadingByKey, editingMessageId} = useAppSelector(state => state.message);
 
     const message = useAppSelector(state =>
         state.message.messages.find(m => m.id === messageId)
@@ -26,9 +24,9 @@ const MessageComponent = ({messageId}: MessageProps) => {
     const senderId = message?.senderId;
     const actualMessageId = message?.id;
 
-    const [editMode, setEditMode] = useState<boolean>(false);
-
     const amISender = currentUserId === senderId;
+
+    const editMode = editingMessageId === actualMessageId;
 
     const handleSave = useCallback(async (newContent: string) => {
         if (!actualMessageId) return;
@@ -50,7 +48,7 @@ const MessageComponent = ({messageId}: MessageProps) => {
                 return;
             }
 
-            setEditMode(false);
+            setEditingMessageId(null);
         } catch {
             setMessageRequestState({
                 key: "edit",
@@ -60,35 +58,17 @@ const MessageComponent = ({messageId}: MessageProps) => {
         } finally {
             setMessageRequestState({key: "edit", isLoading: false});
         }
-    }, [socket, actualMessageId, setMessageRequestState]);
+    }, [socket, actualMessageId, setMessageRequestState, setEditingMessageId]);
 
     const handleCancel = useCallback(() => {
-        setEditMode(false);
-    }, []);
+        setEditingMessageId(null);
+    }, [setEditingMessageId]);
 
     const handleDoubleClick = useCallback(() => {
         if (!amISender || !actualMessageId) return;
 
-        messageEditEvents.dispatchEvent(
-            new CustomEvent("message:edit", {
-                detail: actualMessageId
-            })
-        );
-    }, [amISender, actualMessageId]);
-
-    useEffect(() => {
-        const handleEditMessage = (event: Event) => {
-            const customEvent = event as CustomEvent<string>;
-
-            setEditMode(customEvent.detail === actualMessageId);
-        };
-
-        messageEditEvents.addEventListener("message:edit", handleEditMessage);
-
-        return () => {
-            messageEditEvents.removeEventListener("message:edit", handleEditMessage);
-        };
-    }, [actualMessageId]);
+        setEditingMessageId(actualMessageId);
+    }, [amISender, actualMessageId, setEditingMessageId]);
 
     useEffect(() => {
         const handleMessageUpdated = (updatedMessage: IMessage) => {

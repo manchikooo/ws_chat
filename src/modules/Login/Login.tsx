@@ -37,7 +37,7 @@ export const Login = ({setIsErrorMessage}: LoginProps) => {
             setCurrentUserId(data.userId)
             setIsLoggedIn(true)
         } catch {
-            setUserError("Произошла ошибка при изменении сообщения");
+            setUserError("Произошла ошибка при авторизации");
         } finally {
             setUserLoading(false);
         }

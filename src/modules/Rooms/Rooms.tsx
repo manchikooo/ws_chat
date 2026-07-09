@@ -7,7 +7,7 @@ import {useSocket} from "../../hooks/useSocket.ts";
 import {useAppSelector} from "../../store/store.ts";
 import {useActions} from "../../hooks/useActions.ts";
 import {memo} from "react";
-import type {IRoom} from "../../modules/Room/types.ts";
+import type {IRoom} from "../Room/types.ts";
 
 type RoomButtonProps = {
     room: IRoom;
@@ -36,7 +36,7 @@ export const Rooms = () => {
 
     const {setMessages, setCurrentRoom, setRooms, setRoomRequestState} = useActions();
 
-    const rooms = useAppSelector(state => state.room.rooms);
+    const {rooms} = useAppSelector(state => state.room);
     const isRoomsLoading = useAppSelector(state => state.room.loadingByKey.list ?? false);
     const isCreateRoomLoading = useAppSelector(state => state.room.loadingByKey.create ?? false);
     const isJoinByInviteCodeLoading = useAppSelector(state => state.room.loadingByKey.joinByInviteCode ?? false);

@@ -4,6 +4,7 @@ import {createSlice, type PayloadAction} from "@reduxjs/toolkit";
 
 const initialState: IInitialState = {
     messages: [],
+    editingMessageId: null,
     loadingByKey: {},
     errorByKey: {}
 };
@@ -18,6 +19,9 @@ export const messageSlice = createSlice({
         setNewMessage(state, action: PayloadAction<IMessage>) {
             state.messages.push(action.payload);
         },
+        setEditingMessageId(state, action: PayloadAction<string | null>) {
+            state.editingMessageId = action.payload;
+        },
         setMessageRequestState(
             state,
             action: PayloadAction<{
@@ -30,10 +34,12 @@ export const messageSlice = createSlice({
 
             state.loadingByKey[key] = isLoading;
 
-            if (error) {
-                state.errorByKey[key] = error;
-            } else {
-                delete state.errorByKey[key];
+            if (error !== undefined) {
+                if (error) {
+                    state.errorByKey[key] = error;
+                } else {
+                    delete state.errorByKey[key];
+                }
             }
         }
     }
