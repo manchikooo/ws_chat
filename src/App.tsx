@@ -1,31 +1,33 @@
 import {AppShell, Burger, Image} from '@mantine/core';
 import {useDisclosure} from '@mantine/hooks';
 import viteLogo from './assets/vite.svg'
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import {notifications} from "@mantine/notifications";
 import {Rooms} from "./modules/Rooms/Rooms.tsx";
 import {Login} from "./modules/Login/Login.tsx";
 import {Room} from "./modules/Room/Room.tsx";
 import {useAppSelector} from "./store/store.ts";
 import {ConnectionStatus} from "./components/ConnectionStatus/ConnectionStatus.tsx";
-import {selectCurrentUserId, selectIsLoggedIn} from "./store/slice/user/user.selectors.ts";
+import {selectCurrentUserId, selectIsLoggedIn, selectUserError} from "./store/slice/user/user.selectors.ts";
+import {useActions} from "./hooks/useActions.ts";
 
 function App() {
+    const {setUserError} = useActions()
     const currentUserId = useAppSelector(selectCurrentUserId)
     const isLoggedIn = useAppSelector(selectIsLoggedIn)
+    const userError = useAppSelector(selectUserError);
 
     const [opened, {toggle}] = useDisclosure();
-    const [isErrorMessage, setIsErrorMessage] = useState<string>('');
 
-    // показываю notification, если ошибка при логине. при закрытии notification зачищаю setIsLoginError
+    // показываю notification, если ошибка при логине. при закрытии notification зачищаю setUserError
     useEffect(() => {
-        if (isErrorMessage) {
+        if (userError) {
             notifications.show({
                 title: 'Login error',
-                message: isErrorMessage,
+                message: userError,
                 color: 'red',
                 onClose: () => {
-                    setIsErrorMessage('')
+                    setUserError('')
                     notifications.clean()
                 }
             })
@@ -38,7 +40,7 @@ function App() {
                     notifications.clean()
                 }
             })
-    }, [isErrorMessage, currentUserId]);
+    }, [userError, currentUserId, setUserError]);
 
     return (
         <>
@@ -68,7 +70,7 @@ function App() {
 
                 <AppShell.Main pl={isLoggedIn ? undefined : 'sm'}>
                     {!isLoggedIn
-                        ? <Login setIsErrorMessage={setIsErrorMessage}/>
+                        ? <Login/>
                         : <Room/>
                     }
                 </AppShell.Main>
