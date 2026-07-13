@@ -26,9 +26,10 @@ export const userSlice = createSlice({
         },
         clearUserError(state) {
             state.error = undefined;
-        },
+        }
     }
 });
+
 
 export const userActions = userSlice.actions;
 export const userReducer = userSlice.reducer;

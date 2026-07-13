@@ -1,12 +1,11 @@
 import {Button, Space, Stack, TextInput} from "@mantine/core";
-import type {LoginProps} from "./types.ts";
 import type {UserJoinDto} from "../../api/types.ts";
 import {useUserJoinForm} from "../../forms/login.form.ts";
 import {useAppSelector} from "../../store/store.ts";
 import {useUserApi} from "../../hooks/api/useUserApi.ts";
 import {selectIsUserLoading, selectUserError} from "../../store/slice/user/user.selectors.ts";
 
-export const Login = ({setIsErrorMessage}: LoginProps) => {
+export const Login = () => {
     const {join} = useUserApi();
     const loginForm = useUserJoinForm()
 
@@ -14,12 +13,7 @@ export const Login = ({setIsErrorMessage}: LoginProps) => {
     const userError = useAppSelector(selectUserError);
 
     const handleLogin = async (values: UserJoinDto) => {
-        const user = await join(values);
-
-        if (!user) {
-            setIsErrorMessage("Login failed");
-            return;
-        }
+        await join(values);
     };
 
     return (
